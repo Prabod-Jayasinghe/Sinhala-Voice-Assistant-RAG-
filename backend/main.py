@@ -16,6 +16,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+# Ensure audio output directory exists at import time
+os.makedirs("audio_output", exist_ok=True)
+
 load_dotenv()
 
 from routers import voice_query, text_query, corpus
