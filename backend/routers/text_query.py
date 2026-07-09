@@ -1,0 +1,62 @@
+"""
+Text Query Router — POST /api/text-query
+==========================================
+Text input fallback (SDLC FR-8) — always available, even when mic fails.
+Same RAG pipeline as voice-query, skipping the STT step.
+"""
+
+from fastapi import APIRouter
+
+from models.schemas import SourceCitation, TextQueryRequest, TextQueryResponse
+from services.generator import get_generator_service
+from services.retriever import get_retriever_service
+from services.tts import get_tts_service
+
+router = APIRouter()
+
+
+@router.post("/text-query", response_model=TextQueryResponse)
+async def text_query(request: TextQueryRequest):
+    """
+    Text fallback pipeline (FR-8):
+    1. Retrieve relevant corpus chunks using the typed question
+    2. Generate grounded Sinhala answer via Gemini Flash
+    3. Synthesize answer to audio via edge-tts
+    4. Return answer text, audio URL, and source citations
+    """
+    retriever = get_retriever_service()
+    generator = get_generator_service()
+    tts = get_tts_service()
+
+    # Offensive content check
+    if generator.is_offensive(request.question):
+        answer_text = "ඔබේ ප්‍රශ්නයට පිළිතුරු දීමට නොහැකි විය."
+        answer_audio_url = await tts.synthesize(answer_text)
+        return TextQueryResponse(
+            answer_text=answer_text,
+            answer_audio_url=answer_audio_url,
+            sources=[],
+        )
+
+    retrieval_result = retriever.retrieve(request.question)
+    answer_text = await generator.generate(
+        question=request.question,
+        retrieved_chunks=retrieval_result["chunks"],
+        has_relevant_results=retrieval_result["has_relevant_results"],
+    )
+    answer_audio_url = await tts.synthesize(answer_text)
+
+    sources = [
+        SourceCitation(
+            title=meta.get("title", "Unknown"),
+            source=meta.get("source", "unknown"),
+            published_date=meta.get("published_date") or None,
+        )
+        for meta in retrieval_result.get("sources", [])
+    ]
+
+    return TextQueryResponse(
+        answer_text=answer_text,
+        answer_audio_url=answer_audio_url,
+        sources=sources,
+    )
