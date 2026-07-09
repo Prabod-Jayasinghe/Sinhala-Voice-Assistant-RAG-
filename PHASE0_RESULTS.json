@@ -1,0 +1,62 @@
+[
+  {
+    "sample_id": 1,
+    "original_text": "ආයුබෝවන්, ඔබට කොහොමද?",
+    "transcript": "ආදුන් මිනිත් කොම්පීට",
+    "detected_language": "Sinhala",
+    "duration_s": 2.352,
+    "elapsed_s": 21.8,
+    "segment_count": 1,
+    "avg_logprob": -0.663,
+    "confidence_proxy_0_1": 0.337,
+    "char_set_similarity": 0.556
+  },
+  {
+    "sample_id": 2,
+    "original_text": "ශ්‍රී ලංකාව ඉතාම ලස්සන රටක්.",
+    "transcript": "සිරිල්ලතු කාලාම් තාම්තින් අතිත්තින්.",
+    "detected_language": "Sinhala",
+    "duration_s": 2.7800000000000002,
+    "elapsed_s": 1.35,
+    "segment_count": 1,
+    "avg_logprob": -0.7719,
+    "confidence_proxy_0_1": 0.228,
+    "char_set_similarity": 0.611
+  },
+  {
+    "sample_id": 3,
+    "original_text": "අද කාලගුණය හොඳයි.",
+    "transcript": "අට කාලයි මිටස්ත්ත්.",
+    "detected_language": "Sinhala",
+    "duration_s": 2.135999872,
+    "elapsed_s": 1.28,
+    "segment_count": 1,
+    "avg_logprob": -0.704,
+    "confidence_proxy_0_1": 0.296,
+    "char_set_similarity": 0.533
+  },
+  {
+    "sample_id": 4,
+    "original_text": "මම සිංහල භාෂාව ඉගෙන ගනිමින් සිටිමි.",
+    "transcript": "මිනින්ට මේක් මිනින්ට ගැන්නේ.",
+    "detected_language": "Sinhala",
+    "duration_s": 3.19,
+    "elapsed_s": 6.28,
+    "segment_count": 1,
+    "avg_logprob": -0.6643,
+    "confidence_proxy_0_1": 0.336,
+    "char_set_similarity": 0.444
+  },
+  {
+    "sample_id": 5,
+    "original_text": "ඔබේ නම කුමක්ද?",
+    "transcript": "සිටින්න්න්න්න්න්.",
+    "detected_language": "Sinhala",
+    "duration_s": 1.992,
+    "elapsed_s": 10.37,
+    "segment_count": 1,
+    "avg_logprob": -0.717,
+    "confidence_proxy_0_1": 0.283,
+    "char_set_similarity": 0.182
+  }
+]

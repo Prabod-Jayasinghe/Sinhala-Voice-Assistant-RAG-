@@ -1,0 +1,71 @@
+# Environment & secrets — never commit these
+.env
+.env.local
+.env.production
+*.env
+
+# Google Cloud service account keys
+*-service-account.json
+service_account*.json
+
+# Audio samples (may contain real voice recordings)
+data/audio_samples/
+scripts/test_audio/
+*.mp3
+*.wav
+*.ogg
+*.webm
+*.m4a
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ChromaDB data (rebuild from corpus)
+data/chroma_db/
+data/corpus_cache/
+
+# Node.js / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# MyPy
+.mypy_cache/
