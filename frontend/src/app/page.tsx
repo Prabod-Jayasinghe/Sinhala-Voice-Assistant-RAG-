@@ -119,6 +119,9 @@ export default function Home() {
       }
 
       const data = await response.json();
+      if (data.transliterated_question) {
+        setTranscript(data.transliterated_question);
+      }
       setAnswer(data.answer_text);
       setAudioUrl(data.answer_audio_url);
       setSources(data.sources || []);

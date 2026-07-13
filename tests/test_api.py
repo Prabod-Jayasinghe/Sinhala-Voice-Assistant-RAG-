@@ -141,3 +141,71 @@ def test_corpus_status_endpoint(client):
     data = resp.json()
     assert "document_count" in data
     assert "chunk_count" in data
+
+
+@pytest.mark.asyncio
+async def test_text_query_transliterates_singlish():
+    """POST /api/text-query with romanized text should transliterate to Sinhala Unicode."""
+    mock_retrieval = {
+        "chunks": ["ශ්‍රී ලංකාවේ ජනාධිපති රනිල් වික්‍රමසිංහ."],
+        "sources": [{"title": "News article", "source": "NSINA"}],
+        "distances": [0.2],
+        "has_relevant_results": True,
+        "corpus_empty": False,
+    }
+
+    with (
+        patch("routers.text_query.get_transliteration_service") as mock_trans,
+        patch("routers.text_query.get_retriever_service") as mock_ret,
+        patch("routers.text_query.get_generator_service") as mock_gen,
+        patch("routers.text_query.get_tts_service") as mock_tts,
+    ):
+        # Setup mocks
+        mock_trans.return_value.is_latin_script.return_value = True
+        mock_trans.return_value.to_sinhala_script = AsyncMock(return_value="ශ්‍රී ලංකාවේ ජනාධිපති කවුද?")
+        
+        mock_ret.return_value.retrieve.return_value = mock_retrieval
+        mock_gen.return_value.generate = AsyncMock(return_value="ශ්‍රී ලංකාවේ ජනාධිපති රනිල් වික්‍රමසිංහ.")
+        mock_gen.return_value.is_offensive.return_value = False
+        mock_tts.return_value.synthesize = AsyncMock(return_value="/audio/answer_test.mp3")
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            resp = await ac.post(
+                "/api/text-query",
+                json={"question": "lankave janadhipathi kavuda"},  # Singlish
+            )
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["transliterated_question"] == "ශ්‍රී ලංකාවේ ජනාධිපති කවුද?"
+    assert data["answer_text"] == "ශ්‍රී ලංකාවේ ජනාධිපති රනිල් වික්‍රමසිංහ."
+    mock_trans.return_value.to_sinhala_script.assert_called_once_with("lankave janadhipathi kavuda")
+
+
+def test_is_offensive_heuristics():
+    """Verify that is_offensive correctly flags bad words and allows clean inputs."""
+    from services.generator import GeneratorService
+    
+    # 1. Clean inputs (should return False)
+    assert GeneratorService.is_offensive("ශ්‍රී ලංකාව ඉතාම ලස්සන රටක්") is False
+    assert GeneratorService.is_offensive("What is the capital of Sri Lanka?") is False
+    assert GeneratorService.is_offensive("lankave janadhipathi kavuda?") is False
+    assert GeneratorService.is_offensive("උපකාර සහ සහයෝගය") is False  # Contains "පකාර" which shouldn't false positive
+
+    # 2. Sinhala bad words (should return True)
+    assert GeneratorService.is_offensive("ඒක පකයෙක්") is True
+    assert GeneratorService.is_offensive("හුත්තා") is True
+    assert GeneratorService.is_offensive("කැරියා") is True
+    assert GeneratorService.is_offensive("වේසි") is True
+    assert GeneratorService.is_offensive("පොන්නයා") is True
+
+    # 3. English bad words (should return True)
+    assert GeneratorService.is_offensive("shut up you bitch") is True
+    assert GeneratorService.is_offensive("fuck this") is True
+
+    # 4. Singlish bad words (should return True)
+    assert GeneratorService.is_offensive("uba paka") is True
+    assert GeneratorService.is_offensive("patta ponna") is True
+
+

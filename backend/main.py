@@ -27,10 +27,29 @@ from routers import voice_query, text_query, corpus
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize services on startup."""
-    # Ensure audio output directory exists
-    os.makedirs("audio_output", exist_ok=True)
+    import asyncio
+    from services.retriever import get_retriever_service
+    from services.corpus_ingest import ingest_corpus, scheduled_refresh_loop
+
+    retriever = get_retriever_service()
+
+    async def bootstrap_if_empty():
+        if retriever.collection.count() == 0:
+            print("[Lifespan] ChromaDB is empty. Running initial corpus ingestion...")
+            loop = asyncio.get_running_loop()
+            try:
+                await loop.run_in_executor(None, ingest_corpus, retriever)
+                print("[Lifespan] Initial corpus ingestion completed.")
+            except Exception as e:
+                print(f"[Lifespan] Failed to run initial corpus ingestion: {e}")
+        else:
+            print(f"[Lifespan] ChromaDB has {retriever.collection.count()} chunks. Skipping bootstrap.")
+
+    # Start bootstrap & scheduled refresh in background (FR-9)
+    asyncio.create_task(bootstrap_if_empty())
+    asyncio.create_task(scheduled_refresh_loop(retriever))
+    
     yield
-    # Cleanup on shutdown (nothing needed yet)
 
 
 app = FastAPI(

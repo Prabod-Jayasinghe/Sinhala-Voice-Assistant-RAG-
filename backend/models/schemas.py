@@ -75,6 +75,7 @@ class TextQueryResponse(BaseModel):
     answer_text: str
     answer_audio_url: str
     sources: list[SourceCitation]
+    transliterated_question: Optional[str] = None
 
 
 class CorpusStatusResponse(BaseModel):

@@ -295,3 +295,20 @@ def ingest_corpus(retriever_service) -> dict:
         "chunk_count": total_upserted,
         "message": f"Successfully ingested {len(all_docs)} documents ({total_upserted} chunks) into ChromaDB.",
     }
+
+
+async def scheduled_refresh_loop(retriever_service, interval_seconds: int = 86400):
+    """Background task loop that refreshes the corpus periodically (FR-9)."""
+    import asyncio
+    print(f"[Scheduler] Starting scheduled refresh loop. Interval: {interval_seconds}s")
+    while True:
+        await asyncio.sleep(interval_seconds)
+        print("[Scheduler] Triggering scheduled corpus refresh...")
+        try:
+            loop = asyncio.get_running_loop()
+            # Run in executor to avoid blocking the main event loop
+            await loop.run_in_executor(None, ingest_corpus, retriever_service)
+            print("[Scheduler] Scheduled corpus refresh completed successfully.")
+        except Exception as e:
+            print(f"[Scheduler] Error during scheduled corpus refresh: {e}")
+

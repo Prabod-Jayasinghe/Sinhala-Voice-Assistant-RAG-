@@ -17,6 +17,7 @@ Prompt design:
 """
 
 import os
+import re
 from typing import Optional
 
 import google.generativeai as genai
@@ -106,21 +107,52 @@ class GeneratorService:
             This MVP uses a conservative keyword heuristic and documents this as
             a known gap — not claiming robust moderation it doesn't have.
         """
-        # Simple Latin script ratio check — very high Latin in "Sinhala" input may indicate
-        # attempts to inject English prompts disguised as Sinhala input
         if not text:
             return False
 
-        total = len(text.strip())
-        if total == 0:
-            return False
+        # Clean text: lowercase and strip
+        cleaned_text = text.lower().strip()
+        
+        # Keep only alphanumeric characters, spaces, and the Sinhala Unicode range (\u0d80-\u0dff)
+        cleaned_text = re.sub(r'[^a-z0-9\s\u0d80-\u0dff]', ' ', cleaned_text)
+        tokens = cleaned_text.split()
 
-        latin_chars = sum(1 for c in text if c.isascii() and c.isalpha())
-        latin_ratio = latin_chars / total
+        # 1. English bad words (exact token match)
+        english_bad_words = {
+            "fuck", "shit", "bitch", "bastard", "asshole", "cunt", "motherfucker", 
+            "dick", "pussy", "wanker", "slut", "whore"
+        }
 
-        # If input is > 80% Latin script when we expect Sinhala, flag it
-        if latin_ratio > 0.8:
-            return True
+        # 2. Singlish (romanized Sinhala) bad words (exact token match)
+        singlish_bad_words = {
+            "paka", "pakaya", "pakayaa", "hutta", "hutti", "kariya", "kariyaa", 
+            "vesi", "vese", "vesa", "ponna", "ponnaya", "ponnayaa", "hukana", "pako"
+        }
+
+        # 3. Sinhala script bad word prefixes (tokens starting with these are flagged)
+        sinhala_bad_prefixes = [
+            "පක",      # paka, pakaya, etc.
+            "හුත්ත",    # hutta, hutti, etc.
+            "කැරි",     # kariya, kari, etc.
+            "වේස",     # vesa, vesi, etc.
+            "වේසි",     # vesi
+            "පොන්න",   # ponna, ponnaya, etc.
+            "හුකන",    # hukana
+            "කුණුහරුප"  # kunuharupa
+        ]
+
+        # Check tokens
+        for token in tokens:
+            # Check English and Singlish sets
+            if token in english_bad_words or token in singlish_bad_words:
+                return True
+            
+            # Check Sinhala prefixes
+            for prefix in sinhala_bad_prefixes:
+                if token.startswith(prefix):
+                    # Guard against false positives like "පකාර" (e.g. උපකාර - help)
+                    # "උපකාර" token starts with "උ", not "ප".
+                    return True
 
         return False
 
