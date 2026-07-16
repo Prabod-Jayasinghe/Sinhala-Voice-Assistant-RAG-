@@ -68,7 +68,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://*.vercel.app",
+        "https://sinhala-voice-assistant-9a4elg9wy-j-coder-shans-projects.vercel.app",
         os.getenv("FRONTEND_URL", ""),
     ],
     allow_credentials=True,
