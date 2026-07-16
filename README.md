@@ -61,6 +61,8 @@ It was built as a research-grounded portfolio project: every design decision (mo
 |---|
 | ![Sinhala Voice Assistant UI](./docs/screenshots/app-screenshot.png) |
 
+https://sinhala-voice-assistant-9a4elg9wy-j-coder-shans-projects.vercel.app/
+
 
 ## Key Features
 
