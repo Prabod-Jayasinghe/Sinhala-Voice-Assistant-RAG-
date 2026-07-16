@@ -20,10 +20,11 @@ import os
 import re
 from typing import Optional
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # Fixed responses for edge cases (never hallucinate for these)
 NO_INFO_SINHALA = (
@@ -44,11 +45,7 @@ class GeneratorService:
     def __init__(self):
         if not GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY environment variable not set")
-        genai.configure(api_key=GEMINI_API_KEY)
-        self.model = genai.GenerativeModel(
-            model_name=GEMINI_MODEL,
-            system_instruction=SYSTEM_PROMPT,
-        )
+        self.client = genai.Client(api_key=GEMINI_API_KEY)
 
     async def generate(
         self,
@@ -109,9 +106,11 @@ class GeneratorService:
 
 සිංහල පිළිතුර:"""
 
-        response = await self.model.generate_content_async(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = await self.client.aio.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
                 temperature=0.2,        # Low temp = more grounded, less creative hallucination
                 max_output_tokens=512,
             ),
